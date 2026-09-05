@@ -1,0 +1,39 @@
+#!/bin/sh
+# コミットのたびに「更新ログ」フォルダにメモを自動追記するフック。
+# 有効化: git config core.hooksPath .githooks （開発者ごとに1回実行）
+
+LOG_DIR="更新ログ"
+LOG_FILE="$LOG_DIR/log.md"
+
+SUBJECT=$(git log -1 --pretty=%s)
+
+# ログ更新コミット自身では発火させない（無限ループ防止）
+case "$SUBJECT" in
+  "ログ更新:"*) exit 0 ;;
+esac
+
+mkdir -p "$LOG_DIR"
+if [ ! -f "$LOG_FILE" ]; then
+  echo "# 更新ログ" > "$LOG_FILE"
+  echo "" >> "$LOG_FILE"
+fi
+
+USER_NAME=$(git config user.name)
+DATETIME=$(date "+%Y-%m-%d %H:%M:%S")
+HASH=$(git rev-parse --short HEAD)
+FILES=$(git diff-tree --no-commit-id --name-status -r HEAD)
+
+{
+  echo "## ${DATETIME} - ${USER_NAME} (${HASH})"
+  echo ""
+  echo "**コミットメッセージ:** ${SUBJECT}"
+  echo ""
+  echo "**変更ファイル:**"
+  echo '```'
+  echo "${FILES}"
+  echo '```'
+  echo ""
+} >> "$LOG_FILE"
+
+git add "$LOG_FILE"
+git commit -m "ログ更新: ${SUBJECT}" --no-verify --quiet
