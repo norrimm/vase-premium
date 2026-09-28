@@ -1,0 +1,16 @@
+# 秘匿情報
+.env
+
+# ランタイムデータ
+data/
+logs/
+*.db
+*.db-shm
+*.db-wal
+
+# ビルド成果物
+.gradle/
+build/
+out/
+.idea/
+*.iml

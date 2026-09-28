@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: core-java
+  datasource:
+    url: jdbc:sqlite:${DB_PATH:../data/trade.db}
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      # SQLite は同時に 1 本しか書き込めないので接続も 1 本に絞る
+      maximum-pool-size: 1
+      connection-init-sql: PRAGMA journal_mode=WAL
+  sql:
+    init:
+      mode: always
+
+market:
+  symbol: ${SYMBOL:BTCUSDT}
+  timeframe: ${TIMEFRAME:5m}
+  backfill-days: ${BACKFILL_DAYS:365}
+  sync-interval: 60s
+  binance:
+    rest-base-url: https://api.binance.com
+    ws-base-url: wss://stream.binance.com:9443
+    request-pause: 200ms
+    max-retries: 5
+    stream-idle-timeout: 90s
+
+logging:
+  file:
+    name: ${LOG_PATH:../logs}/core-java.log
+  level:
+    com.example.trade: INFO
