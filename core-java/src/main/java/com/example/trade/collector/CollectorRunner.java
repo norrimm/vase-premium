@@ -5,6 +5,7 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
@@ -34,14 +35,16 @@ public class CollectorRunner {
     private final CandleRepository repository;
     private final TaskScheduler scheduler;
     private final MarketProperties props;
+    private final ApplicationEventPublisher events;
 
     public CollectorRunner(CandleBackfillService backfill, CandleStream stream, CandleRepository repository,
-            TaskScheduler scheduler, MarketProperties props) {
+            TaskScheduler scheduler, MarketProperties props, ApplicationEventPublisher events) {
         this.backfill = backfill;
         this.stream = stream;
         this.repository = repository;
         this.scheduler = scheduler;
         this.props = props;
+        this.events = events;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -64,6 +67,7 @@ public class CollectorRunner {
         repository.upsert(c);
         log.info("確定足 {} {} {} O={} H={} L={} C={} V={}", c.symbol(), c.timeframe(),
                 Instant.ofEpochMilli(c.openTime()), c.open(), c.high(), c.low(), c.close(), c.volume());
+        events.publishEvent(new CandlesStoredEvent(c.symbol(), c.timeframe(), c.openTime()));
     }
 
     private void syncSafely() {

@@ -1,6 +1,8 @@
 spring:
   application:
     name: core-java
+  config:
+    import: classpath:rules.yml
   datasource:
     url: jdbc:sqlite:${DB_PATH:../data/trade.db}
     driver-class-name: org.sqlite.JDBC

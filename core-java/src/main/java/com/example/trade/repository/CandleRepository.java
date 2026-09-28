@@ -45,6 +45,22 @@ public class CandleRepository {
         });
     }
 
+    /** fromOpenTime 以降の足を古い順に返す。 */
+    public List<Candle> findFrom(String symbol, Timeframe tf, long fromOpenTime) {
+        return jdbc.query("""
+                SELECT open_time, open, high, low, close, volume FROM candles
+                WHERE symbol = ? AND timeframe = ? AND open_time >= ?
+                ORDER BY open_time
+                """, (rs, i) -> new Candle(symbol, tf,
+                        rs.getLong("open_time"),
+                        rs.getDouble("open"),
+                        rs.getDouble("high"),
+                        rs.getDouble("low"),
+                        rs.getDouble("close"),
+                        rs.getDouble("volume")),
+                symbol, tf.code(), fromOpenTime);
+    }
+
     public Optional<Long> findEarliestOpenTime(String symbol, Timeframe tf) {
         Long v = jdbc.queryForObject(
                 "SELECT MIN(open_time) FROM candles WHERE symbol = ? AND timeframe = ?",

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.example.trade.config.MarketProperties;
@@ -29,14 +30,16 @@ public class CandleBackfillService {
     private final ExchangeClient client;
     private final CandleRepository repository;
     private final MarketProperties props;
+    private final ApplicationEventPublisher events;
 
     private Long lastSyncedAt;
 
     public CandleBackfillService(ExchangeClient client, CandleRepository repository,
-            MarketProperties props) {
+            MarketProperties props, ApplicationEventPublisher events) {
         this.client = client;
         this.repository = repository;
         this.props = props;
+        this.events = events;
     }
 
     /** @return 保存した確定足の本数 */
@@ -64,11 +67,13 @@ public class CandleBackfillService {
 
         int saved = 0;
         int pages = 0;
+        long firstSaved = now;
         // from の足が確定しているときだけ取りに行く
         while (from + tf.millis() <= now) {
             List<Candle> page = client.fetchCandles(symbol, tf, from, client.maxLimit());
             List<Candle> closed = page.stream().filter(c -> c.closeTime() <= now).toList();
             if (!closed.isEmpty()) {
+                firstSaved = Math.min(firstSaved, closed.get(0).openTime());
                 repository.upsertAll(closed);
                 saved += closed.size();
             }
@@ -87,6 +92,7 @@ public class CandleBackfillService {
             log.info("{} {} {} を {} 本同期しました (DB 合計 {} 本)",
                     client.name(), symbol, tf, saved, repository.count(symbol, tf));
         }
+        events.publishEvent(new CandlesStoredEvent(symbol, tf, firstSaved));
         return saved;
     }
 

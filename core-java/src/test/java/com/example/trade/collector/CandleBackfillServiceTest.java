@@ -46,7 +46,7 @@ class CandleBackfillServiceTest {
         exchange = new FakeExchange(3);
         MarketProperties props = new MarketProperties("BTCUSDT", "5m", 1, Duration.ofSeconds(60),
                 new MarketProperties.Binance("", "", Duration.ZERO, 0, Duration.ofSeconds(90)));
-        service = new CandleBackfillService(exchange, repository, props);
+        service = new CandleBackfillService(exchange, repository, props, event -> { });
     }
 
     @AfterEach
