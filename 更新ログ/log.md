@@ -50,3 +50,36 @@ A	core-java/src/test/java/com/example/trade/repository/CandleRepositoryTest.java
 A	core-java/src/test/java/com/example/trade/repository/TestDatabase.java
 ```
 
+## 2026-09-29 01:43:23 - ryuta (b70ad16)
+
+**コミットメッセージ:** 指標計算と検知ルール評価を追加（Step 2）
+
+**変更ファイル:**
+```
+M	core-java/README.md
+M	core-java/src/main/java/com/example/trade/collector/CandleBackfillService.java
+A	core-java/src/main/java/com/example/trade/collector/CandlesStoredEvent.java
+M	core-java/src/main/java/com/example/trade/collector/CollectorRunner.java
+A	core-java/src/main/java/com/example/trade/config/RuleProperties.java
+A	core-java/src/main/java/com/example/trade/domain/Feature.java
+A	core-java/src/main/java/com/example/trade/domain/MarketSnapshot.java
+A	core-java/src/main/java/com/example/trade/indicator/Atr.java
+A	core-java/src/main/java/com/example/trade/indicator/FeatureService.java
+A	core-java/src/main/java/com/example/trade/indicator/IndicatorCalculator.java
+A	core-java/src/main/java/com/example/trade/indicator/Macd.java
+A	core-java/src/main/java/com/example/trade/indicator/MovingAverage.java
+A	core-java/src/main/java/com/example/trade/indicator/Rsi.java
+A	core-java/src/main/java/com/example/trade/monitor/CandleClosedListener.java
+A	core-java/src/main/java/com/example/trade/monitor/Rule.java
+A	core-java/src/main/java/com/example/trade/monitor/RuleEngine.java
+M	core-java/src/main/java/com/example/trade/repository/CandleRepository.java
+A	core-java/src/main/java/com/example/trade/repository/FeatureRepository.java
+M	core-java/src/main/resources/application.yml
+A	core-java/src/main/resources/rules.yml
+M	core-java/src/main/resources/schema.sql
+M	core-java/src/test/java/com/example/trade/collector/CandleBackfillServiceTest.java
+A	core-java/src/test/java/com/example/trade/indicator/FeatureServiceTest.java
+A	core-java/src/test/java/com/example/trade/indicator/IndicatorTest.java
+A	core-java/src/test/java/com/example/trade/monitor/RuleEngineTest.java
+```
+
