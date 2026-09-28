@@ -83,3 +83,27 @@ A	core-java/src/test/java/com/example/trade/indicator/IndicatorTest.java
 A	core-java/src/test/java/com/example/trade/monitor/RuleEngineTest.java
 ```
 
+## 2026-09-29 02:00:10 - ryuta (f7861b2)
+
+**コミットメッセージ:** ルール一致時の Discord 通知を追加（Step 3）
+
+**変更ファイル:**
+```
+M	.env.example
+M	core-java/README.md
+A	core-java/src/main/java/com/example/trade/config/NotifyProperties.java
+A	core-java/src/main/java/com/example/trade/domain/Signal.java
+M	core-java/src/main/java/com/example/trade/monitor/CandleClosedListener.java
+A	core-java/src/main/java/com/example/trade/notify/DiscordNotifier.java
+A	core-java/src/main/java/com/example/trade/notify/DuplicateSuppressor.java
+A	core-java/src/main/java/com/example/trade/notify/MessageBuilder.java
+A	core-java/src/main/java/com/example/trade/notify/NotifyException.java
+A	core-java/src/main/java/com/example/trade/notify/SignalNotifier.java
+A	core-java/src/main/java/com/example/trade/repository/NotificationRepository.java
+A	core-java/src/main/java/com/example/trade/repository/SignalRepository.java
+M	core-java/src/main/resources/application.yml
+M	core-java/src/main/resources/schema.sql
+A	core-java/src/test/java/com/example/trade/notify/MessageBuilderTest.java
+A	core-java/src/test/java/com/example/trade/notify/SignalNotifierTest.java
+```
+
