@@ -8,13 +8,16 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.example.trade.collector.CandlesStoredEvent;
+import com.example.trade.config.NotifyProperties;
 import com.example.trade.domain.MarketSnapshot;
 import com.example.trade.indicator.FeatureService;
 import com.example.trade.monitor.RuleEngine.Evaluation;
+import com.example.trade.notify.SignalNotifier;
 
 /**
  * 足が保存されるたびに指標を更新し、最新の確定足をルールで評価してログに残す。
- * 起動時のバックフィルなどでまとめて入った過去の足は、件数と直近の一致だけをログに出す。
+ * 一致したら通知に回す。起動時のバックフィルなどでまとめて入った過去の足は、
+ * 件数と直近の一致だけをログに出す（通知はしない）。
  */
 @Component
 public class CandleClosedListener {
@@ -24,12 +27,17 @@ public class CandleClosedListener {
 
     private final FeatureService featureService;
     private final RuleEngine ruleEngine;
+    private final SignalNotifier signalNotifier;
 
     private long lastEvaluatedOpenTime = Long.MIN_VALUE;
+    private boolean testPending;
 
-    public CandleClosedListener(FeatureService featureService, RuleEngine ruleEngine) {
+    public CandleClosedListener(FeatureService featureService, RuleEngine ruleEngine,
+            SignalNotifier signalNotifier, NotifyProperties notifyProps) {
         this.featureService = featureService;
         this.ruleEngine = ruleEngine;
+        this.signalNotifier = signalNotifier;
+        this.testPending = notifyProps.discord().sendTestOnStartup();
     }
 
     @EventListener
@@ -60,8 +68,13 @@ public class CandleClosedListener {
             Evaluation e = ruleEngine.evaluate(latest);
             if (e.hit()) {
                 log.info("候補検知 [{}] {}", e.ruleHit(), e.describe());
+                signalNotifier.onCandidate(e);
             } else {
                 log.info("評価 {}", e.describe());
+            }
+            if (testPending) {
+                testPending = false;
+                signalNotifier.sendTest(e);
             }
         }
     }

@@ -2,7 +2,10 @@ spring:
   application:
     name: core-java
   config:
-    import: classpath:rules.yml
+    # リポジトリ直下の .env（Git 管理外）を読む。OS の環境変数があればそちらが優先
+    import:
+      - classpath:rules.yml
+      - optional:file:../.env[.properties]
   datasource:
     url: jdbc:sqlite:${DB_PATH:../data/trade.db}
     driver-class-name: org.sqlite.JDBC
@@ -25,6 +28,18 @@ market:
     request-pause: 200ms
     max-retries: 5
     stream-idle-timeout: 90s
+
+notify:
+  # 同一銘柄・同一方向のシグナルはこの時間内に再通知しない
+  cooldown: ${NOTIFY_COOLDOWN_MINUTES:60}m
+  # 足の確定からこれ以上たった候補は通知しない（停止明けに古い候補を送らない）
+  max-delay: 10m
+  discord:
+    # 空なら通知せず、signals への保存とログだけ行う
+    webhook-url: ${DISCORD_WEBHOOK_URL:}
+    max-retries: 3
+    # true なら起動後最初の評価結果を、ルール一致に関係なくテスト通知として送る
+    send-test-on-startup: ${NOTIFY_TEST:false}
 
 logging:
   file:

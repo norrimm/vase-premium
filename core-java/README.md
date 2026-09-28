@@ -1,7 +1,7 @@
 # core-java（データ取得・監視）
 
-MVP 要件定義の F-01〜F-04 にあたる部分。取引所（今は Binance）から足を取得して SQLite に貯め、
-確定足ごとに指標を計算して検知ルールで評価し、結果をログに出す。
+MVP 要件定義の F-01〜F-04、F-06〜F-08 にあたる部分。取引所（今は Binance）から足を取得して SQLite に貯め、
+確定足ごとに指標を計算して検知ルールで評価し、一致したら Discord に通知する（AI はまだ入っていない）。
 
 ```
 起動
@@ -12,7 +12,15 @@ MVP 要件定義の F-01〜F-04 にあたる部分。取引所（今は Binance�
 足が保存されるたびに
  ├─ 指標を計算 → features に保存（RSI14 / MACD 12,26,9 / SMA20・50 / SMA20 乖離率 / 出来高MA20 比 / ATR14）
  └─ 最新の確定足を検知ルールで評価 → ログに「候補検知」または「評価」を 1 行
-    （起動時にまとめて入った過去の足は、一致件数と直近 10 件だけを出す）
+    （起動時にまとめて入った過去の足は、一致件数と直近 10 件だけを出す。通知はしない）
+
+候補検知のとき
+ ├─ signals に BUY として保存（同じ足は 1 回だけ）
+ ├─ 次のどれかに当たれば通知しない（理由はログに出る）
+ │   ・DISCORD_WEBHOOK_URL が未設定
+ │   ・足の確定から 10 分以上たっている（停止明けに古い候補を送らない）
+ │   ・同じ銘柄の BUY を NOTIFY_COOLDOWN_MINUTES 分以内に送っている
+ └─ Discord Webhook に Embed を送信 → notifications に sent / failed を記録
 ```
 
 ログの例:
@@ -34,6 +42,15 @@ cd core-java
 
 公開マーケットデータだけを使うので、API キーは不要。
 
+Discord に通知するには Webhook URL を環境変数で渡す（`.env` は自動では読まれない）。
+Webhook URL は Discord のチャンネル設定 → 連携サービス → ウェブフックで作る。
+
+```powershell
+$env:DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/..."
+$env:NOTIFY_TEST = "true"   # 疎通確認: 起動後最初の評価結果をテスト通知として 1 回送る
+.\gradlew.bat bootRun
+```
+
 ## 設定（環境変数）
 
 | 変数 | 既定値 | 内容 |
@@ -43,8 +60,12 @@ cd core-java
 | `BACKFILL_DAYS` | `365` | 起動時にさかのぼる日数 |
 | `DB_PATH` | `../data/trade.db` | SQLite ファイル |
 | `LOG_PATH` | `../logs` | ログ出力先 |
+| `DISCORD_WEBHOOK_URL` | （空） | 通知先。空なら通知せず signals への保存とログだけ |
+| `NOTIFY_COOLDOWN_MINUTES` | `60` | 同一銘柄・同一方向のシグナルを再通知しない時間（分） |
+| `NOTIFY_TEST` | `false` | `true` で起動後最初の評価結果をテスト通知として送る |
 
-REST・WebSocket の接続先やリトライ回数などは `src/main/resources/application.yml` の `market.*`。
+REST・WebSocket の接続先やリトライ回数などは `src/main/resources/application.yml` の `market.*`、
+通知まわりは `notify.*`。
 検知ルールの閾値は `src/main/resources/rules.yml`。
 
 ## 構成
@@ -61,8 +82,14 @@ REST・WebSocket の接続先やリトライ回数などは `src/main/resources/
 | `indicator/IndicatorCalculator` | 足の列から指標を計算（`Rsi` `Macd` `MovingAverage` `Atr`） |
 | `indicator/FeatureService` | 新しい足と未計算の足の指標を計算して `features` に保存 |
 | `monitor/RuleEngine` | `rules.yml` の条件で評価。条件ごとの成否と値を返す |
-| `monitor/CandleClosedListener` | 足の保存イベントを受けて指標更新 → 評価 → ログ |
+| `monitor/CandleClosedListener` | 足の保存イベントを受けて指標更新 → 評価 → ログ → 一致なら通知へ |
 | `repository/FeatureRepository` | `features` テーブルへの upsert |
+| `notify/SignalNotifier` | シグナル保存 → 通知可否の判定 → 送信 → 通知履歴の記録 |
+| `notify/DuplicateSuppressor` | 同一銘柄・同一方向の再通知を抑止 |
+| `notify/MessageBuilder` | Discord の Embed を組み立てる |
+| `notify/DiscordNotifier` | Webhook へ POST。429 / 5xx はリトライ。URL はログに出さない |
+| `repository/SignalRepository` | `signals` への保存（同じ足は 1 件だけ） |
+| `repository/NotificationRepository` | `notifications` への記録と最終送信時刻の検索 |
 
 ## 注意
 
