@@ -68,7 +68,7 @@ core-java 側は `.env` の `AI_SERVICE_URL=http://localhost:8000` で AI を使
 | --- | --- | --- |
 | `DB_PATH` | `../data/trade.db` | SQLite（ai-python からの相対パス） |
 | `SYMBOL` / `TIMEFRAME` | `BTCUSDT` / `5m` | 対象 |
-| `PROBABILITY_THRESHOLD` | `0.7` | BUY とする反発確率 |
+| `PROBABILITY_THRESHOLD` | `0.5` | BUY とする反発確率 |
 | `MODEL_VERSION` | （空） | 使うモデル。空なら artifacts の最新 |
 | `TRAIN_DAYS` | `365` | 学習に使う日数 |
 | `LABEL_HORIZON` / `LABEL_TARGET_PCT` | `12` / `0.8` | 教師ラベル |

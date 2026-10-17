@@ -72,7 +72,7 @@ class Settings:
             reports_dir=_resolve(get("REPORTS_DIR", "reports")),
             rules_path=_resolve(get("RULES_PATH", "../core-java/src/main/resources/rules.yml")),
             model_version=get("MODEL_VERSION", ""),
-            probability_threshold=float(get("PROBABILITY_THRESHOLD", "0.7")),
+            probability_threshold=float(get("PROBABILITY_THRESHOLD", "0.5")),
             confidence_a=float(get("CONFIDENCE_A", "0.8")),
             label_horizon=int(get("LABEL_HORIZON", "12")),
             label_target_pct=float(get("LABEL_TARGET_PCT", "0.8")),
