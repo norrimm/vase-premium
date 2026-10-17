@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from app.backtest import engine, report
+from app.backtest import engine, report, walkforward
 from app.backtest.metrics import summarize
 from app.backtest.rules import BuyDipRule
 from app.db.session import connect
@@ -89,3 +89,22 @@ def test_backtest_end_to_end(settings):
     assert (rule_times >= 60 * 60_000).all()
     paths = report.write_csv(result, settings.reports_dir)
     assert pd.read_csv(paths["summary"], encoding="utf-8-sig")["strategy"].tolist() == ["rule", "rule+ai"]
+
+
+def test_walk_forward_retrains_per_fold(settings):
+    with connect(settings.db_path) as conn:
+        to_ms = T0 + 5800 * STEP
+        result = walkforward.run(conn, settings, to_ms, folds=2, fold_days=3, thresholds=[0.4, 0.6],
+                                 stop_mults=[1.0, 2.0], targets=[0.8], horizons=[12])
+    f = result.by_fold
+    # 区間 2 × 損切り 2 ×（rule 1 行 + rule+ai 閾値 2 行）
+    assert len(f) == 2 * 2 * 3
+    # 区間ごとに直前のデータだけで学習し直している
+    versions = f.groupby("fold")["model_version"].first()
+    assert versions[1] != versions[2]
+    assert len(result.total) == 2 * 3
+    assert (result.total["folds"] == 2).all()
+    # 通算の取引数は区間ごとの合計と一致する
+    per_fold = f.groupby(["stop_mult", "strategy", "threshold"], dropna=False)["trades"].sum()
+    total = result.total.set_index(["stop_mult", "strategy", "threshold"])["trades"]
+    assert per_fold.sort_index().tolist() == total.sort_index().tolist()

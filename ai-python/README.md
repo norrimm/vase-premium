@@ -62,6 +62,20 @@ core-java 側は `.env` の `AI_SERVICE_URL=http://localhost:8000` で AI を使
 - 手数料は片道 `BACKTEST_FEE_PCT`（0.1%）を往復分差し引く。通知の重複抑止（60 分）も再現する
 - `rule`（ルールのみ）と `rule+ai`（ルール + AI 閾値）の 2 行を出す。列: 取引数 / 勝率 / PF / 最大 DD(%) / 合計損益(%) / 平均損益(%) / ラベル的中率
 
+### ウォークフォワード（数年分の検証）
+
+数年分を 1 つのモデルで通すと古い相場のモデルで新しい相場を予測することになるので、区間（既定 1 年 × 5）に分けて
+区間ごとに直前 `TRAIN_DAYS` 日だけで学習し直して検証する。利確幅・損切り幅・閾値の組み合わせも比べられる。
+
+```powershell
+# DB に「最初の区間の開始 − TRAIN_DAYS 日」からの足が必要。5 年なら 6 年分（core-java を BACKFILL_DAYS=2200 で起動）
+.\.venv\Scripts\python scripts\walk_forward.py --to 2026-10-16
+.\.venv\Scripts\python scripts\walk_forward.py --thresholds 0.5,0.6,0.7 --stop-mults 1.0,1.5,2.0 --targets 0.8,1.2,1.5 --horizons 12,24
+```
+
+結果は `reports/walkforward_*_{by_fold,total,trades}.csv`。`total` の `winning_folds` は何区間でプラスだったか
+（通算がプラスでも 1 区間の大勝ちに頼っていないかを見る）。組み合わせを多く試すほど、たまたま良い組み合わせが出やすい点に注意。
+
 ## 設定（環境変数。リポジトリ直下の `.env` も読む）
 
 | 変数 | 既定値 | 内容 |
