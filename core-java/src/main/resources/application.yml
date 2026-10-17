@@ -29,6 +29,11 @@ market:
     max-retries: 5
     stream-idle-timeout: 90s
 
+ai:
+  # ai-python の URL（例: http://localhost:8000）。空なら AI を使わずルール一致だけで通知する
+  service-url: ${AI_SERVICE_URL:}
+  timeout: 3s
+
 notify:
   # 同一銘柄・同一方向のシグナルはこの時間内に再通知しない
   cooldown: ${NOTIFY_COOLDOWN_MINUTES:60}m
@@ -40,6 +45,11 @@ notify:
     max-retries: 3
     # true なら起動後最初の評価結果を、ルール一致に関係なくテスト通知として送る
     send-test-on-startup: ${NOTIFY_TEST:false}
+  alert:
+    # 同じ箇所の障害が続いている間はこの間隔でしか再通知しない
+    cooldown: ${ALERT_COOLDOWN_MINUTES:30}m
+    # WebSocket がこの時間つながらなければ障害として通知する
+    stream-down-after: 5m
 
 logging:
   file:

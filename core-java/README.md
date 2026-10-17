@@ -1,7 +1,8 @@
 # core-java（データ取得・監視）
 
-MVP 要件定義の F-01〜F-04、F-06〜F-08 にあたる部分。取引所（今は Binance）から足を取得して SQLite に貯め、
-確定足ごとに指標を計算して検知ルールで評価し、一致したら Discord に通知する（AI はまだ入っていない）。
+MVP 要件定義の F-01〜F-08、F-10 にあたる部分。取引所（今は Binance）から足を取得して SQLite に貯め、
+確定足ごとに指標を計算して検知ルールで評価し、一致したら AI（`../ai-python`）に反発確率を問い合わせて Discord に通知する。
+障害（取得失敗・API エラー・推論失敗）も Discord に通知する。
 
 ```
 起動
@@ -15,13 +16,23 @@ MVP 要件定義の F-01〜F-04、F-06〜F-08 にあたる部分。取引所（�
     （起動時にまとめて入った過去の足は、一致件数と直近 10 件だけを出す。通知はしない）
 
 候補検知のとき
- ├─ signals に BUY として保存（同じ足は 1 回だけ）
+ ├─ AI_SERVICE_URL があれば POST /analyze で反発確率を取得（3 秒で打ち切り）
+ │   ・BUY（確率が閾値以上）/ HOLD をそのまま使う
+ │   ・推論に失敗したら障害通知を出し、ルール一致 = BUY として続ける（AI が落ちていても取りこぼさない）
+ ├─ signals に保存（同じ足は 1 回だけ）。確率・利確・損切り・信頼度も入る
  ├─ 次のどれかに当たれば通知しない（理由はログに出る）
+ │   ・AI の判定が HOLD
  │   ・DISCORD_WEBHOOK_URL が未設定
  │   ・足の確定から 10 分以上たっている（停止明けに古い候補を送らない）
  │   ・同じ銘柄の BUY を NOTIFY_COOLDOWN_MINUTES 分以内に送っている
  └─ Discord Webhook に Embed を送信 → notifications に sent / failed を記録
 ```
+
+障害（F-10）
+ ├─ REST 同期の失敗 / WebSocket が 5 分以上つながらない / 指標計算の失敗 / AI 推論の失敗
+ ├─ すべて system_log に記録
+ ├─ Discord には箇所ごとに最初の 1 回と、続いていれば ALERT_COOLDOWN_MINUTES 分ごとに 1 回（赤）
+ └─ 障害を通知した箇所が直ったら「復旧」を 1 回（青）
 
 ログの例:
 
@@ -63,9 +74,11 @@ $env:NOTIFY_TEST = "true"   # 疎通確認: 起動後最初の評価結果をテ
 | `DISCORD_WEBHOOK_URL` | （空） | 通知先。空なら通知せず signals への保存とログだけ |
 | `NOTIFY_COOLDOWN_MINUTES` | `60` | 同一銘柄・同一方向のシグナルを再通知しない時間（分） |
 | `NOTIFY_TEST` | `false` | `true` で起動後最初の評価結果をテスト通知として送る |
+| `ALERT_COOLDOWN_MINUTES` | `30` | 同じ箇所の障害を再通知しない時間（分） |
+| `AI_SERVICE_URL` | （空） | ai-python の URL（例 `http://localhost:8000`）。空なら AI を使わずルール一致だけで通知 |
 
 REST・WebSocket の接続先やリトライ回数などは `src/main/resources/application.yml` の `market.*`、
-通知まわりは `notify.*`。
+通知まわりは `notify.*`、AI は `ai.*`。
 検知ルールの閾値は `src/main/resources/rules.yml`。
 
 ## 構成
@@ -84,12 +97,15 @@ REST・WebSocket の接続先やリトライ回数などは `src/main/resources/
 | `monitor/RuleEngine` | `rules.yml` の条件で評価。条件ごとの成否と値を返す |
 | `monitor/CandleClosedListener` | 足の保存イベントを受けて指標更新 → 評価 → ログ → 一致なら通知へ |
 | `repository/FeatureRepository` | `features` テーブルへの upsert |
-| `notify/SignalNotifier` | シグナル保存 → 通知可否の判定 → 送信 → 通知履歴の記録 |
+| `ai/AiClient` | ai-python の `POST /analyze` を呼ぶ。リトライせず 3 秒で打ち切る |
+| `notify/SignalNotifier` | AI 推論 → シグナル保存 → 通知可否の判定 → 送信 → 通知履歴の記録 |
+| `notify/AlertNotifier` | 障害を system_log に記録し、間引いて Discord に通知。復旧も通知 |
 | `notify/DuplicateSuppressor` | 同一銘柄・同一方向の再通知を抑止 |
 | `notify/MessageBuilder` | Discord の Embed を組み立てる |
 | `notify/DiscordNotifier` | Webhook へ POST。429 / 5xx はリトライ。URL はログに出さない |
 | `repository/SignalRepository` | `signals` への保存（同じ足は 1 件だけ） |
 | `repository/NotificationRepository` | `notifications` への記録と最終送信時刻の検索 |
+| `repository/SystemLogRepository` | `system_log`（障害の記録）への保存 |
 
 ## 注意
 

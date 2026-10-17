@@ -12,6 +12,8 @@ import com.example.trade.config.NotifyProperties;
 import com.example.trade.domain.MarketSnapshot;
 import com.example.trade.indicator.FeatureService;
 import com.example.trade.monitor.RuleEngine.Evaluation;
+import com.example.trade.notify.AlertNotifier;
+import com.example.trade.notify.AlertSource;
 import com.example.trade.notify.SignalNotifier;
 
 /**
@@ -28,15 +30,17 @@ public class CandleClosedListener {
     private final FeatureService featureService;
     private final RuleEngine ruleEngine;
     private final SignalNotifier signalNotifier;
+    private final AlertNotifier alerts;
 
     private long lastEvaluatedOpenTime = Long.MIN_VALUE;
     private boolean testPending;
 
     public CandleClosedListener(FeatureService featureService, RuleEngine ruleEngine,
-            SignalNotifier signalNotifier, NotifyProperties notifyProps) {
+            SignalNotifier signalNotifier, AlertNotifier alerts, NotifyProperties notifyProps) {
         this.featureService = featureService;
         this.ruleEngine = ruleEngine;
         this.signalNotifier = signalNotifier;
+        this.alerts = alerts;
         this.testPending = notifyProps.discord().sendTestOnStartup();
     }
 
@@ -44,9 +48,11 @@ public class CandleClosedListener {
     public synchronized void onCandlesStored(CandlesStoredEvent event) {
         try {
             process(event);
+            alerts.recovered(AlertSource.INDICATOR);
         } catch (RuntimeException e) {
             // 足の保存側（WebSocket / REST 同期）を止めないよう、ここで止める。次の足で再計算される
             log.error("指標の計算・ルール評価に失敗しました", e);
+            alerts.failure(AlertSource.INDICATOR, "指標の計算・ルール評価に失敗しました: " + e);
         }
     }
 

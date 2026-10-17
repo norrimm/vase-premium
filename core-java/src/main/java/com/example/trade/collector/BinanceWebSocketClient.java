@@ -8,6 +8,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,6 +59,8 @@ public class BinanceWebSocketClient implements CandleStream {
     private volatile boolean running;
     private volatile WebSocket webSocket;
     private volatile long lastMessageAt;
+    /** 配信が途切れた時刻（epoch ms）。0 なら受信できている。 */
+    private volatile long disconnectedSince;
 
     private URI uri;
     private Timeframe tf;
@@ -94,6 +97,12 @@ public class BinanceWebSocketClient implements CandleStream {
         }
     }
 
+    @Override
+    public OptionalLong disconnectedSince() {
+        long since = disconnectedSince;
+        return since == 0 ? OptionalLong.empty() : OptionalLong.of(since);
+    }
+
     private void connect() {
         // 古い接続からの遅れて届くコールバックを無視するため、接続ごとに世代番号を振る
         int gen = generation.incrementAndGet();
@@ -116,7 +125,13 @@ public class BinanceWebSocketClient implements CandleStream {
     }
 
     private void scheduleReconnect(int gen) {
-        if (!running || gen != generation.get() || !reconnectPending.compareAndSet(false, true)) {
+        if (!running || gen != generation.get()) {
+            return;
+        }
+        if (disconnectedSince == 0) {
+            disconnectedSince = clock.millis();
+        }
+        if (!reconnectPending.compareAndSet(false, true)) {
             return;
         }
         int failures = consecutiveFailures.getAndIncrement();
@@ -148,6 +163,7 @@ public class BinanceWebSocketClient implements CandleStream {
 
     private void handleMessage(String text) {
         lastMessageAt = clock.millis();
+        disconnectedSince = 0;
         consecutiveFailures.set(0);
         try {
             parseClosedKline(mapper.readTree(text), tf).ifPresent(onClosedCandle);

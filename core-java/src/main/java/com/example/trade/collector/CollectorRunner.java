@@ -1,6 +1,8 @@
 package com.example.trade.collector;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.OptionalLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +13,11 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 import com.example.trade.config.MarketProperties;
+import com.example.trade.config.NotifyProperties;
 import com.example.trade.domain.Candle;
 import com.example.trade.domain.Timeframe;
+import com.example.trade.notify.AlertNotifier;
+import com.example.trade.notify.AlertSource;
 import com.example.trade.repository.CandleRepository;
 
 import jakarta.annotation.PreDestroy;
@@ -23,6 +28,7 @@ import jakarta.annotation.PreDestroy;
  *   <li>REST でバックフィル（過去 backfillDays 日分）</li>
  *   <li>WebSocket で確定足をリアルタイム受信</li>
  *   <li>REST で定期的に欠損を補完（WebSocket 切断中の取りこぼし対策）</li>
+ *   <li>REST の失敗・WebSocket の長時間切断を障害として通知（F-10）</li>
  * </ol>
  */
 @Component
@@ -36,15 +42,20 @@ public class CollectorRunner {
     private final TaskScheduler scheduler;
     private final MarketProperties props;
     private final ApplicationEventPublisher events;
+    private final AlertNotifier alerts;
+    private final Duration streamDownAfter;
 
     public CollectorRunner(CandleBackfillService backfill, CandleStream stream, CandleRepository repository,
-            TaskScheduler scheduler, MarketProperties props, ApplicationEventPublisher events) {
+            TaskScheduler scheduler, MarketProperties props, ApplicationEventPublisher events,
+            AlertNotifier alerts, NotifyProperties notifyProps) {
         this.backfill = backfill;
         this.stream = stream;
         this.repository = repository;
         this.scheduler = scheduler;
         this.props = props;
         this.events = events;
+        this.alerts = alerts;
+        this.streamDownAfter = notifyProps.alert().streamDownAfter();
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -73,9 +84,27 @@ public class CollectorRunner {
     private void syncSafely() {
         try {
             backfill.syncToNow();
+            alerts.recovered(AlertSource.REST_SYNC);
         } catch (Exception e) {
             // 次回の定期同期で再試行される
             log.error("REST 同期に失敗しました", e);
+            alerts.failure(AlertSource.REST_SYNC, "REST 同期に失敗しました: " + e.getMessage());
+        }
+        checkStream();
+    }
+
+    /** WebSocket が streamDownAfter 以上つながっていなければ障害として通知する（欠損は REST 同期が埋める）。 */
+    private void checkStream() {
+        OptionalLong since = stream.disconnectedSince();
+        if (since.isEmpty()) {
+            alerts.recovered(AlertSource.STREAM);
+            return;
+        }
+        long downFor = System.currentTimeMillis() - since.getAsLong();
+        if (downFor >= streamDownAfter.toMillis()) {
+            alerts.failure(AlertSource.STREAM, "WebSocket が " + downFor / 60_000
+                    + " 分つながっていません（足は REST 同期で補完中。通知が最大 " + props.syncInterval().toSeconds()
+                    + " 秒遅れます）");
         }
     }
 }

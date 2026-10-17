@@ -44,3 +44,9 @@ CREATE TABLE IF NOT EXISTS notifications (
   sent_at     INTEGER NOT NULL,
   payload     TEXT
 );
+
+-- 障害の記録（F-10）。Discord への障害通知とは別に、抑止された分も含めてすべて残す
+CREATE TABLE IF NOT EXISTS system_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  level       TEXT, source TEXT, message TEXT, created_at INTEGER
+);

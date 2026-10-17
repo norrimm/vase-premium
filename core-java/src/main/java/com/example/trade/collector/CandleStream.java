@@ -1,5 +1,6 @@
 package com.example.trade.collector;
 
+import java.util.OptionalLong;
 import java.util.function.Consumer;
 
 import com.example.trade.domain.Candle;
@@ -14,4 +15,7 @@ public interface CandleStream {
     void start(String symbol, Timeframe tf, Consumer<Candle> onClosedCandle);
 
     void stop();
+
+    /** 配信が途切れていればその開始時刻（epoch ms）。受信できていれば空。障害通知の判定に使う。 */
+    OptionalLong disconnectedSince();
 }
