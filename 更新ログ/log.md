@@ -107,3 +107,81 @@ A	core-java/src/test/java/com/example/trade/notify/MessageBuilderTest.java
 A	core-java/src/test/java/com/example/trade/notify/SignalNotifierTest.java
 ```
 
+## 2026-10-17 16:05:52 - ryuta (7c1c82c)
+
+**コミットメッセージ:** AI 推論・バックテスト・障害通知を追加（F-05 / F-09 / F-10）
+
+**変更ファイル:**
+```
+M	.env.example
+M	README.md
+A	ai-python/.gitignore
+A	ai-python/README.md
+A	ai-python/app/__init__.py
+A	ai-python/app/api/__init__.py
+A	ai-python/app/api/analyze.py
+A	ai-python/app/api/backtest.py
+A	ai-python/app/api/periods.py
+A	ai-python/app/api/train.py
+A	ai-python/app/backtest/__init__.py
+A	ai-python/app/backtest/engine.py
+A	ai-python/app/backtest/metrics.py
+A	ai-python/app/backtest/report.py
+A	ai-python/app/backtest/rules.py
+A	ai-python/app/config.py
+A	ai-python/app/db/__init__.py
+A	ai-python/app/db/queries.py
+A	ai-python/app/db/session.py
+A	ai-python/app/features/__init__.py
+A	ai-python/app/features/builder.py
+A	ai-python/app/features/labeling.py
+A	ai-python/app/features/technical.py
+A	ai-python/app/main.py
+A	ai-python/app/models/__init__.py
+A	ai-python/app/models/lgbm.py
+A	ai-python/app/models/pipeline.py
+A	ai-python/app/models/predictor.py
+A	ai-python/app/models/registry.py
+A	ai-python/artifacts/.gitkeep
+A	ai-python/pyproject.toml
+A	ai-python/reports/.gitkeep
+A	ai-python/scripts/run_backtest.py
+A	ai-python/scripts/train.py
+A	ai-python/tests/__init__.py
+A	ai-python/tests/conftest.py
+A	ai-python/tests/test_api.py
+A	ai-python/tests/test_backtest.py
+A	ai-python/tests/test_features.py
+M	core-java/README.md
+A	core-java/src/main/java/com/example/trade/ai/AiClient.java
+A	core-java/src/main/java/com/example/trade/ai/AiException.java
+A	core-java/src/main/java/com/example/trade/ai/AnalyzeRequest.java
+A	core-java/src/main/java/com/example/trade/ai/AnalyzeResponse.java
+M	core-java/src/main/java/com/example/trade/collector/BinanceWebSocketClient.java
+M	core-java/src/main/java/com/example/trade/collector/CandleStream.java
+M	core-java/src/main/java/com/example/trade/collector/CollectorRunner.java
+A	core-java/src/main/java/com/example/trade/config/AiProperties.java
+M	core-java/src/main/java/com/example/trade/config/NotifyProperties.java
+M	core-java/src/main/java/com/example/trade/monitor/CandleClosedListener.java
+A	core-java/src/main/java/com/example/trade/notify/AlertNotifier.java
+A	core-java/src/main/java/com/example/trade/notify/AlertSource.java
+M	core-java/src/main/java/com/example/trade/notify/MessageBuilder.java
+M	core-java/src/main/java/com/example/trade/notify/SignalNotifier.java
+A	core-java/src/main/java/com/example/trade/repository/SystemLogRepository.java
+M	core-java/src/main/resources/application.yml
+M	core-java/src/main/resources/schema.sql
+A	core-java/src/test/java/com/example/trade/notify/AlertNotifierTest.java
+M	core-java/src/test/java/com/example/trade/notify/SignalNotifierTest.java
+```
+
+## 2026-10-17 16:12:15 - ryuta (f25be30)
+
+**コミットメッセージ:** AI の閾値の既定値を 0.5 に変更
+
+**変更ファイル:**
+```
+M	.env.example
+M	ai-python/README.md
+M	ai-python/app/config.py
+```
+
