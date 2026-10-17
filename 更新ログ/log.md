@@ -185,3 +185,16 @@ M	ai-python/README.md
 M	ai-python/app/config.py
 ```
 
+## 2026-10-17 16:35:55 - ryuta (3a5bf60)
+
+**コミットメッセージ:** ウォークフォワード・バックテストを追加し、利確幅を 1.5% に変更
+
+**変更ファイル:**
+```
+M	.env.example
+M	ai-python/README.md
+A	ai-python/app/backtest/walkforward.py
+A	ai-python/scripts/walk_forward.py
+M	ai-python/tests/test_backtest.py
+```
+
