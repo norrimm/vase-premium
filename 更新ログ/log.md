@@ -328,3 +328,13 @@ M	README.md
 A	scripts/service.ps1
 ```
 
+## 2026-10-19 01:06:07 - ryuta (ffa6e07)
+
+**コミットメッセージ:** 15 分足の収集（検証用）も Windows サービスとして常時起動する
+
+**変更ファイル:**
+```
+M	README.md
+M	scripts/service.ps1
+```
+
