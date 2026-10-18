@@ -52,7 +52,7 @@ core-java 側は `.env` の `AI_SERVICE_URL=http://localhost:8000` で AI を使
 - 学習: 全部の確定足（ルール一致の足だけでは 1 年で数百本しかなく少なすぎるため）。
   時系列分割の 5 分割 CV（ラベルの先読み分 12 本の間隔を空ける。シャッフルなし）で成績を出してから全期間で学習する
 - 出力: 反発確率 ≥ `PROBABILITY_THRESHOLD` なら BUY。信頼度は `CONFIDENCE_A`（0.8）以上で A、閾値以上で B、それ以外 C
-- 利確目標 = +0.8%（ラベルと同じ）、損切り目安 = ATR(14) × `STOP_ATR_MULT`（2.0）下
+- 利確目標 = +`LABEL_TARGET_PCT`%（1.5。ラベルと同じ）、損切り目安 = ATR(14) × `STOP_ATR_MULT`（2.0）下
 
 ## バックテスト（F-09）
 
@@ -85,7 +85,7 @@ core-java 側は `.env` の `AI_SERVICE_URL=http://localhost:8000` で AI を使
 | `PROBABILITY_THRESHOLD` | `0.5` | BUY とする反発確率 |
 | `MODEL_VERSION` | （空） | 使うモデル。空なら artifacts の最新 |
 | `TRAIN_DAYS` | `365` | 学習に使う日数 |
-| `LABEL_HORIZON` / `LABEL_TARGET_PCT` | `12` / `0.8` | 教師ラベル |
+| `LABEL_HORIZON` / `LABEL_TARGET_PCT` | `12` / `1.5` | 教師ラベル（利確幅も同じ値。変えたらモデルを学習し直す） |
 | `STOP_ATR_MULT` | `2.0` | 損切り幅（ATR の倍数） |
 | `CONFIDENCE_A` | `0.8` | 信頼度 A の下限 |
 | `BACKTEST_FEE_PCT` | `0.1` | バックテストの片道手数料（%） |

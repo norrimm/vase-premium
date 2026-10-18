@@ -75,7 +75,7 @@ class Settings:
             probability_threshold=float(get("PROBABILITY_THRESHOLD", "0.5")),
             confidence_a=float(get("CONFIDENCE_A", "0.8")),
             label_horizon=int(get("LABEL_HORIZON", "12")),
-            label_target_pct=float(get("LABEL_TARGET_PCT", "0.8")),
+            label_target_pct=float(get("LABEL_TARGET_PCT", "1.5")),
             stop_atr_mult=float(get("STOP_ATR_MULT", "2.0")),
             train_days=int(get("TRAIN_DAYS", "365")),
             fee_pct=float(get("BACKTEST_FEE_PCT", "0.1")),
