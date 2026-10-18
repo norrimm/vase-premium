@@ -207,3 +207,14 @@ M	ai-python/tests/test_backtest.py
 M	README.md
 ```
 
+## 2026-10-18 23:11:02 - maakishii (e8c3db2)
+
+**コミットメッセージ:** 開発プロセスをSkills化（精度改善サイクル＋レビューゲート）
+
+**変更ファイル:**
+```
+A	.claude/skills/accuracy-cycle/SKILL.md
+A	.claude/skills/accuracy-review/SKILL.md
+A	CLAUDE.md
+```
+
