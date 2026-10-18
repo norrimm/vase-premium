@@ -263,3 +263,12 @@ M	.claude/skills/accuracy-review/SKILL.md
 M	.claude/skills/accuracy-review/SKILL.md
 ```
 
+## 2026-10-18 23:27:29 - maakishii (f175a28)
+
+**コミットメッセージ:** accuracy-reviewに観点を追加: 数値計算・冪等性・テスト容易性・性能
+
+**変更ファイル:**
+```
+M	.claude/skills/accuracy-review/SKILL.md
+```
+
