@@ -5,6 +5,7 @@ BTC/USDT の反発シグナルを検知して Discord に通知するプロジ�
 - `core-java/` — 取得・指標計算・ルール検知・通知（[README](core-java/README.md)）
 - `ai-python/` — 反発確率の推論・学習・バックテスト（[README](ai-python/README.md)）
 - `資料置き場/` — 要件定義などの設計資料（MD）
+  - `精度改善ログ.md` — `accuracy-cycle`/`accuracy-review` の実行結果（合格・不合格・要修正すべて）を積み上げる履歴
 - `更新ログ/log.md` — コミットのたびに自動生成される履歴（**手で編集しない**。下記フック参照）
 
 ## 開発の基本ルール
