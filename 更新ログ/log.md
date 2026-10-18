@@ -236,3 +236,12 @@ M	.claude/skills/accuracy-review/SKILL.md
 M	.claude/skills/accuracy-review/SKILL.md
 ```
 
+## 2026-10-18 23:16:19 - maakishii (eeaae6f)
+
+**コミットメッセージ:** accuracy-reviewの指摘に優先度（必須/推奨/任意）を追加
+
+**変更ファイル:**
+```
+M	.claude/skills/accuracy-review/SKILL.md
+```
+
