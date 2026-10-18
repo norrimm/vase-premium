@@ -245,3 +245,12 @@ M	.claude/skills/accuracy-review/SKILL.md
 M	.claude/skills/accuracy-review/SKILL.md
 ```
 
+## 2026-10-18 23:18:33 - maakishii (e3548df)
+
+**コミットメッセージ:** accuracy-reviewの指摘パターンを4種に拡張、検出有無の明示・継続改善を追加
+
+**変更ファイル:**
+```
+M	.claude/skills/accuracy-review/SKILL.md
+```
+
