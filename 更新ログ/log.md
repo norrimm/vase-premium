@@ -198,3 +198,12 @@ A	ai-python/scripts/walk_forward.py
 M	ai-python/tests/test_backtest.py
 ```
 
+## 2026-10-18 22:53:27 - maakishii (f75c2da)
+
+**コミットメッセージ:** ルートREADMEに構成図を追加
+
+**変更ファイル:**
+```
+M	README.md
+```
+
