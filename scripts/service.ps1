@@ -1,4 +1,4 @@
-﻿# core-java と ai-python を Windows サービス（NSSM）として常時起動する。
+﻿# core-java（5 分足の本番・15 分足の検証用）と ai-python を Windows サービス（NSSM）として常時起動する。
 # PC 起動時に自動で立ち上がり、落ちたら 10 秒後に再起動する。ログインしていなくても動く。
 #
 #   .\scripts\service.ps1 install    # jar をビルドしてサービス登録 → 起動（要: 管理者）
@@ -24,8 +24,18 @@ $ServiceJar = Join-Path $CoreDir 'build\service\core-java.jar'
 
 $AiService = 'vase-ai-python'
 $CoreService = 'vase-core-java'
+# 15 分足の検証用。足を trade_15m.db に貯めるだけで、Discord 通知も AI も使わない
+$Core15mService = 'vase-core-java-15m'
+$Core15mArgs = @(
+    '--market.timeframe=15m'
+    '--market.backfill-days=2200'
+    '--spring.datasource.url=jdbc:sqlite:../data/trade_15m.db'
+    '--notify.discord.webhook-url='
+    '--ai.service-url='
+    '--logging.file.name=../logs/core-java-15m.log'
+) -join ' '
 # 起動は AI → core の順、停止は core → AI の順
-$Services = @($AiService, $CoreService)
+$Services = @($AiService, $CoreService, $Core15mService)
 
 function Find-Nssm {
     $packages = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages'
@@ -84,6 +94,8 @@ function Install-Services {
     if (-not (Test-Path (Join-Path $RepoDir '.env'))) { throw '.env がない。.env.example をコピーして作る' }
 
     New-Item -ItemType Directory -Force $LogDir | Out-Null
+    # 登録済みのサービスが jar をつかんでいると上書きできないので先に止める
+    Stop-All
     Build-Jar
 
     if (-not (Test-Installed $AiService)) {
@@ -98,6 +110,12 @@ function Install-Services {
     # .env や DB の相対パス（../.env, ../data/trade.db）は core-java/ を基準に解決される
     & $nssm set $CoreService AppDirectory $CoreDir | Out-Null
     Set-Common $nssm $CoreService 'vase-premium: 足の取得・ルール検知・Discord 通知（core-java）' 'core-java'
+
+    if (-not (Test-Installed $Core15mService)) {
+        & $nssm install $Core15mService $java "-jar `"$ServiceJar`" $Core15mArgs" | Out-Null
+    }
+    & $nssm set $Core15mService AppDirectory $CoreDir | Out-Null
+    Set-Common $nssm $Core15mService 'vase-premium: 15 分足の収集（検証用。通知なし）' 'core-java-15m'
 
     Start-All
 }
@@ -125,7 +143,7 @@ function Uninstall-Services {
 function Show-Status {
     foreach ($s in $Services) {
         $svc = Get-Service $s -ErrorAction SilentlyContinue
-        if ($svc) { '{0,-16} {1}' -f $s, $svc.Status } else { '{0,-16} 未登録' -f $s }
+        if ($svc) { '{0,-20} {1}' -f $s, $svc.Status } else { '{0,-20} 未登録' -f $s }
     }
     try {
         $health = Invoke-RestMethod 'http://127.0.0.1:8000/health' -TimeoutSec 3

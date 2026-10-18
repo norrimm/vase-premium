@@ -39,7 +39,7 @@ winget install NSSM.NSSM            # 初回だけ
 # スクリプト実行が無効と言われたら初回だけ（自分のユーザーで、ローカルのスクリプトの実行を許可する）
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 # 以下は PowerShell を「管理者として実行」で開いて、リポジトリ直下で実行する
-.\scripts\service.ps1 install       # core-java の jar をビルド → 2 つのサービスを登録 → 起動
+.\scripts\service.ps1 install       # core-java の jar をビルド → 3 つのサービスを登録 → 起動
 .\scripts\service.ps1 status        # 状態と ai-python の /health（これだけは管理者でなくてよい）
 .\scripts\service.ps1 update        # core-java のコードを変えたあと（停止 → 再ビルド → 起動）
 .\scripts\service.ps1 restart       # 学習し直したモデルを ai-python に読み込ませるとき
@@ -48,6 +48,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
 - サービス名は `vase-ai-python`（127.0.0.1:8000）と `vase-core-java`。設定はどちらも従来どおりリポジトリ直下の `.env` を読む
+- 15 分足の検証用に `vase-core-java-15m` も登録する（`data/trade_15m.db` に 2200 日分の足を貯めるだけ。Discord 通知・AI は使わない。ログは `logs/core-java-15m.log`）
 - `install` の前に、手で起動している `bootRun`（5 分足の本番）と `uvicorn` は止めておく（ポート 8000 と DB の取り合いになる）
 - ログ: `logs/core-java.log`（アプリのログ）、`logs/*.out.log` / `*.err.log`（標準出力。10MB でローテーション）
 - PC がスリープすると止まる。電源設定で「スリープしない」にしておく（`powercfg /change standby-timeout-ac 0`）
