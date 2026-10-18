@@ -28,3 +28,26 @@ Discord（シグナル通知／障害通知）
 ```
 
 起動の流れ: `.env.example` を `.env` にコピー → core-java を起動して足を貯める → ai-python で学習して API を起動 → core-java が AI を使って通知する。
+
+## 常時起動（Windows サービス）
+
+Claude やターミナルを閉じても動き続けるよう、core-java と ai-python を Windows サービスとして登録できる（[NSSM](https://nssm.cc/)。無料）。
+PC 起動時に自動で立ち上がり、落ちたら 10 秒後に再起動する。ログインしていなくても動く。
+
+```powershell
+winget install NSSM.NSSM            # 初回だけ
+# スクリプト実行が無効と言われたら初回だけ（自分のユーザーで、ローカルのスクリプトの実行を許可する）
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+# 以下は PowerShell を「管理者として実行」で開いて、リポジトリ直下で実行する
+.\scripts\service.ps1 install       # core-java の jar をビルド → 2 つのサービスを登録 → 起動
+.\scripts\service.ps1 status        # 状態と ai-python の /health（これだけは管理者でなくてよい）
+.\scripts\service.ps1 update        # core-java のコードを変えたあと（停止 → 再ビルド → 起動）
+.\scripts\service.ps1 restart       # 学習し直したモデルを ai-python に読み込ませるとき
+.\scripts\service.ps1 stop          # / start
+.\scripts\service.ps1 uninstall     # 停止して登録を消す
+```
+
+- サービス名は `vase-ai-python`（127.0.0.1:8000）と `vase-core-java`。設定はどちらも従来どおりリポジトリ直下の `.env` を読む
+- `install` の前に、手で起動している `bootRun`（5 分足の本番）と `uvicorn` は止めておく（ポート 8000 と DB の取り合いになる）
+- ログ: `logs/core-java.log`（アプリのログ）、`logs/*.out.log` / `*.err.log`（標準出力。10MB でローテーション）
+- PC がスリープすると止まる。電源設定で「スリープしない」にしておく（`powercfg /change standby-timeout-ac 0`）
