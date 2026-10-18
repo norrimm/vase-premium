@@ -79,4 +79,7 @@ def settings(tmp_path: Path) -> Settings:
         "    sma20-deviation-at-most: -0.3\n    volume-ratio-above: 1.0\n", encoding="utf-8")
     return replace(Settings.load(), db_path=db, artifacts_dir=tmp_path / "artifacts",
                    reports_dir=tmp_path / "reports", rules_path=rules, model_version="",
-                   symbol="BTCUSDT", timeframe="5m", train_days=365, probability_threshold=0.5)
+                   symbol="BTCUSDT", timeframe="5m", train_days=365, probability_threshold=0.5,
+                   # 手元の .env の値でテストの期待値が変わらないよう、数値の設定はすべて固定する
+                   confidence_a=0.8, label_horizon=12, label_target_pct=0.8, stop_atr_mult=2.0,
+                   fee_pct=0.1, cooldown_minutes=60)
