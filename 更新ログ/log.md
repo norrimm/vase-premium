@@ -291,3 +291,12 @@ M	.claude/skills/accuracy-cycle/SKILL.md
 M	CLAUDE.md
 ```
 
+## 2026-10-18 23:35:58 - maakishii (4067ad6)
+
+**コミットメッセージ:** accuracy-reviewを『レビューして』単独呼び出しでも使えるように対応
+
+**変更ファイル:**
+```
+M	.claude/skills/accuracy-review/SKILL.md
+```
+
