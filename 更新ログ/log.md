@@ -218,3 +218,12 @@ A	.claude/skills/accuracy-review/SKILL.md
 A	CLAUDE.md
 ```
 
+## 2026-10-18 23:11:54 - maakishii (ffbc29c)
+
+**コミットメッセージ:** accuracy-reviewのコードレビュー観点を作り込み
+
+**変更ファイル:**
+```
+M	.claude/skills/accuracy-review/SKILL.md
+```
+
