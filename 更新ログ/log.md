@@ -254,3 +254,12 @@ M	.claude/skills/accuracy-review/SKILL.md
 M	.claude/skills/accuracy-review/SKILL.md
 ```
 
+## 2026-10-18 23:25:23 - maakishii (baa00e4)
+
+**コミットメッセージ:** accuracy-reviewに観点を追加: 失敗の握りつぶし・変更範囲・テスト弱体化の検出
+
+**変更ファイル:**
+```
+M	.claude/skills/accuracy-review/SKILL.md
+```
+
